@@ -25,23 +25,19 @@ const StorySchema = new Schema({
     }
   ],
   price: {
-    type: Number,
-    required: true
+    type: Number
   },
   address: {
-    type: String,
-    required: true
+    type: String
   },
   phone: {
-    type: String,
-    required: true
+    type: String
   },
   website: {
     type: String
   },
   workingHours: {
-    type: String,
-    required: true
+    type: String
   },
   facebook: {
     type: String

@@ -228,14 +228,14 @@ function StoryForm({ swal,
       />
 
 
-      <label>ვიზიტის საფასური</label>
+      <label>ვიზიტის საფასური (არასავალდებულო)</label>
       <input
         type="number" placeholder="ვიზიტის საფასური"
         value={price}
         onChange={ev => setPrice(ev.target.value)}
       />
 
-      <label>მისამართი</label>
+      <label>მისამართი (არასავალდებულო)</label>
       <input
         type="text" placeholder="მისამართი"
         value={address}
@@ -243,7 +243,7 @@ function StoryForm({ swal,
       />
 
 
-      <label>ტელეფონი</label>
+      <label>ტელეფონი (არასავალდებულო)</label>
       <input
         type="text" placeholder="ტელეფონი"
         value={phone}
@@ -257,7 +257,7 @@ function StoryForm({ swal,
         onChange={ev => setWebsite(ev.target.value)}
       />
 
-      <label>სამუშაო საათები</label>
+      <label>სამუშაო საათები (არასავალდებულო)</label>
       <input
         type="text" placeholder="სამუშაო საათები"
         value={workingHours}
