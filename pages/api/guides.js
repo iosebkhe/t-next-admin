@@ -42,7 +42,7 @@ export default async function handle(req, res) {
 
 
   if (method === 'POST') {
-    // await isAdminRequest(req, res);
+    await isAdminRequest(req, res);
 
     const {
       fullName,
