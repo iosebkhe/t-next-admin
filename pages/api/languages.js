@@ -1,4 +1,4 @@
-import { Category } from "@/models/Category";
+import { Language } from "@/models/Language";
 import { mongooseConnect } from "@/lib/mongoose";
 import { authOptions, isAdminRequest } from "@/pages/api/auth/[...nextauth]";
 
@@ -7,34 +7,34 @@ export default async function handle(req, res) {
   await mongooseConnect();
 
   if (method === 'GET') {
-    res.json(await Category.find());
+    res.json(await Language.find());
   }
 
   if (method === 'POST') {
     await isAdminRequest(req, res);
 
     const { name } = req.body;
-    const categoryDoc = await Category.create({
+    const languageDoc = await Language.create({
       name,
     });
-    res.json(categoryDoc);
+    res.json(languageDoc);
   }
 
   if (method === 'PUT') {
     await isAdminRequest(req, res);
 
     const { name, _id } = req.body;
-    const categoryDoc = await Category.updateOne({ _id }, {
+    const languageDoc = await Language.updateOne({ _id }, {
       name,
     });
-    res.json(categoryDoc);
+    res.json(languageDoc);
   }
 
   if (method === 'DELETE') {
     await isAdminRequest(req, res);
 
     const { _id } = req.query;
-    await Category.deleteOne({ _id });
+    await Language.deleteOne({ _id });
     res.json('ok');
   }
 }

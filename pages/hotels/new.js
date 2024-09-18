@@ -1,11 +1,11 @@
-import ProductForm from "@/components/ProductForm";
+import HotelForm from "@/components/HotelForm";
 import Layout from "@/components/Layout";
 
-export default function NewProduct() {
+export default function NewHotel() {
   return (
     <Layout>
       <h1>ახალის დამატება</h1>
-      <ProductForm />
+      <HotelForm />
     </Layout>
   );
 }

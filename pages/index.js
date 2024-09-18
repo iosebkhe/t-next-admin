@@ -1,19 +1,16 @@
 import Layout from "@/components/Layout";
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+
 
 export default function Home() {
-  const {data: session} = useSession();
+  const { data: session } = useSession();
   return <Layout>
-    <div className="text-blue-900 flex justify-between">
-      <h2>
-        Hello, <b>{session?.user?.name}</b>
-      </h2>
-      <div className="flex bg-gray-300 gap-1 text-black rounded-lg overflow-hidden">
-        <img src={session?.user?.image} alt="" className="w-6 h-6"/>
-        <span className="px-2">
-          {session?.user?.name}
-        </span>
-      </div>
+    <h2 className="text-primary text-2xl text-center">
+      მოგესალმები, <strong>{session?.user?.name}</strong>
+    </h2>
+    <div className="flex justify-center items-center mt-40">
+      {/* <Link className="bg-primary text-3xl text-white font-medium p-3 rounded" href={'/hotels/new'}>პროდუქტის დამატება</Link> */}
     </div>
-  </Layout>
+  </Layout>;
 }

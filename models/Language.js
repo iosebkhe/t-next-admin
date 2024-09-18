@@ -1,6 +1,6 @@
 import mongoose, { model, models, Schema } from "mongoose";
 
-const CategorySchema = new Schema({
+const LanguageSchema = new Schema({
   name: {
     type: String,
     required: true,
@@ -8,4 +8,4 @@ const CategorySchema = new Schema({
   },
 });
 
-export const Category = models?.Category || model('Category', CategorySchema);
+export const Language = models?.Language || model('Language', LanguageSchema);

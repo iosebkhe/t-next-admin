@@ -3,33 +3,36 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function DeleteProductPage() {
+export default function DeleteStoryPage() {
   const router = useRouter();
-  const [productInfo, setProductInfo] = useState();
+  const [storyInfo, setStoryInfo] = useState();
   const { id } = router.query;
   useEffect(() => {
     if (!id) {
       return;
     }
-    axios.get('/api/products?id=' + id).then(response => {
-      setProductInfo(response.data);
+    axios.get('/api/stories?id=' + id).then(response => {
+      setStoryInfo(response.data);
     });
   }, [id]);
+
   function goBack() {
-    router.push('/products');
+    router.push('/stories');
   }
-  async function deleteProduct() {
-    await axios.delete('/api/products?id=' + id);
+
+  async function deleteStory() {
+    await axios.delete('/api/stories?id=' + id);
     goBack();
   }
+
   return (
     <Layout>
       <h1 className="text-center">გსურთ წაშალოთ
-        &nbsp;&quot;{productInfo?.title}&quot;?
+        &nbsp;&quot;{storyInfo?.title}&quot;?
       </h1>
       <div className="flex gap-2 justify-center">
         <button
-          onClick={deleteProduct}
+          onClick={deleteStory}
           className="btn-red">დიახ</button>
         <button
           className="btn-default"

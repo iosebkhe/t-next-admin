@@ -1,67 +1,110 @@
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import Spinner from "@/components/Spinner";
 import { ReactSortable } from "react-sortablejs";
+import { withSwal } from "react-sweetalert2";
 
-export default function ProductForm({
+function StoryForm({ swal,
   _id,
   title: existingTitle,
   description: existingDescription,
   descriptionSmall: existingDescriptionSmall,
   images: existingImages,
-  category: assignedCategory,
-  properties: assignedProperties,
-  availableRooms: existingAvailableRooms,
+  categories: assignedCategories,
+  price: existingPrice,
   address: existingAddress,
   phone: existingPhone,
   website: existingWebsite,
   workingHours: existingWorkingHours,
   facebook: existingFacebook,
   instagram: existingInstagram,
-  tripadvisor: existingTripAdvisor,
+  tripAdvisor: existingTripAdvisor,
 }) {
   const [title, setTitle] = useState(existingTitle || '');
   const [description, setDescription] = useState(existingDescription || '');
   const [descriptionSmall, setDescriptionSmall] = useState(existingDescriptionSmall || '');
-  const [category, setCategory] = useState(assignedCategory || '');
-  const [productProperties, setProductProperties] = useState(assignedProperties || {});
+  const [categories, setCategories] = useState(() => {
+    if (assignedCategories) {
+      return assignedCategories;
+    } else {
+      return [];
+    }
+  });
   const [images, setImages] = useState(existingImages || []);
-  const [goToProducts, setGoToProducts] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [availableRooms, setAvailableRooms] = useState(existingAvailableRooms || "");
-  const [address, setAddress] = useState(existingAvailableRooms || "");
+  const [price, setPrice] = useState(existingPrice || "");
+  const [address, setAddress] = useState(existingAddress || "");
   const [phone, setPhone] = useState(existingPhone || "");
   const [website, setWebsite] = useState(existingWebsite || "");
   const [workingHours, setWorkingHours] = useState(existingWorkingHours || "");
   const [facebook, setFacebook] = useState(existingFacebook || "");
   const [instagram, setInstagram] = useState(existingInstagram || "");
   const [tripAdvisor, setTripAdvisor] = useState(existingTripAdvisor || "");
+
+  const [goToStories, setGoToStories] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fetchedCategories, setFetchedCategories] = useState([]);
+
   const router = useRouter();
+
   useEffect(() => {
     axios.get('/api/categories').then(result => {
-      setCategories(result.data);
+      setFetchedCategories(result.data);
     });
   }, []);
-  async function saveProduct(ev) {
+
+
+  const handleCategoryChange = (categoryId) => {
+    const category = fetchedCategories.find((cat) => cat._id === categoryId);
+
+    if (!category) {
+      console.error('Category not found:', categoryId);
+      return;
+    }
+
+    if (categories.find((cat) => cat._id === categoryId)) {
+      setCategories((prevCategories) =>
+        prevCategories.filter((cat) => cat._id !== categoryId)
+      );
+    } else {
+      setCategories([...categories, category]);
+    }
+  };
+
+  async function saveStory(ev) {
     ev.preventDefault();
     const data = {
-      title, description, descriptionSmall, images, category, availableRooms, address, phone, website, workingHours, facebook, instagram, tripAdvisor,
-      properties: productProperties
+      title,
+      description,
+      descriptionSmall,
+      images,
+      categories,
+      price,
+      address,
+      phone,
+      website,
+      workingHours,
+      facebook,
+      instagram,
+      tripAdvisor,
     };
     if (_id) {
       //update
-      await axios.put('/api/products', { ...data, _id });
+      await axios.put('/api/stories', { ...data, _id });
     } else {
       //create
-      await axios.post('/api/products', data);
+      await axios.post('/api/stories', data);
     }
-    setGoToProducts(true);
+    setGoToStories(true);
   }
-  if (goToProducts) {
-    router.push('/products');
+
+
+  if (goToStories) {
+    router.push('/stories');
   }
+
+
   async function uploadImages(ev) {
     const files = ev.target?.files;
     if (files?.length > 0) {
@@ -77,60 +120,62 @@ export default function ProductForm({
       setIsUploading(false);
     }
   }
-  function updateImagesOrder(images) {
-    setImages(images);
-  }
-  function setProductProp(propName, value) {
-    setProductProperties(prev => {
-      const newProductProps = { ...prev };
-      newProductProps[propName] = value;
-      return newProductProps;
+
+  function confirmDeleteImage(link) {
+    swal.fire({
+      title: 'ნამდვილად გსურთ სურათის წაშლა?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d55',
+      cancelButtonText: 'დახურვა',
+      confirmButtonText: 'წაშლა',
+      reverseButtons: true,
+    }).then(async result => {
+      if (result.isConfirmed) {
+        deleteImage(link); // Call the delete function if confirmed
+      }
     });
   }
 
-  const propertiesToFill = [];
-  if (categories.length > 0 && category) {
-    let catInfo = categories.find(({ _id }) => _id === category);
-    propertiesToFill.push(...catInfo.properties);
-    while (catInfo?.parent?._id) {
-      const parentCat = categories.find(({ _id }) => _id === catInfo?.parent?._id);
-      propertiesToFill.push(...parentCat.properties);
-      catInfo = parentCat;
-    }
+  // Function to delete image
+  async function deleteImage(link) {
+    const key = link.split('/').pop(); // Extracting the filename from the link
+    await axios.post('/api/delete', { key });
+    setImages(oldImages => oldImages.filter(image => image !== link)); // Remove from state
+  }
+
+  function updateImagesOrder(images) {
+    setImages(images);
   }
 
   return (
-    <form onSubmit={saveProduct}>
+    <form onSubmit={saveStory}>
       <label>სახელი</label>
       <input
         type="text"
-        placeholder="product name"
+        placeholder="სახელი"
         value={title}
         onChange={ev => setTitle(ev.target.value)} />
-      <label>კატეგორია</label>
-      <select value={category}
-        onChange={ev => setCategory(ev.target.value)}>
-        <option value="">Uncategorized</option>
-        {categories.length > 0 && categories.map(c => (
-          <option key={c._id} value={c._id}>{c.name}</option>
-        ))}
-      </select>
-      {propertiesToFill.length > 0 && propertiesToFill.map(p => (
-        <div key={p.name} className="">
-          <label>{p.name[0].toUpperCase() + p.name.substring(1)}</label>
-          <div>
-            <select value={productProperties[p.name]}
-              onChange={ev =>
-                setProductProp(p.name, ev.target.value)
-              }
-            >
-              {p.values.map(v => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
+
+      <label className="my-3 inline-block">კატეგორიები</label>
+      <div className="grid grid-cols-4 gap-2 p-3 shadow-lg max-h-32 overflow-auto mb-5">
+        {fetchedCategories.map((category) => (
+
+          <div key={category._id}>
+            <label className="flex items-center gap-1 text-base">
+              {category.name}
+              <input
+                className="w-auto p-0 m-0"
+                type="checkbox"
+                value={category._id}
+                defaultChecked={categories.find((cat) => cat._id === category._id)}
+                onChange={(ev) => handleCategoryChange(category._id)}
+              />
+            </label>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
       <label>
         ფოტოები
       </label>
@@ -140,8 +185,15 @@ export default function ProductForm({
           className="flex flex-wrap gap-1"
           setList={updateImagesOrder}>
           {!!images?.length && images.map(link => (
-            <div key={link} className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200">
-              <img src={link} alt="" className="rounded-lg" />
+            <div key={link} className="h-44 bg-white p-4 shadow-sm rounded-sm border border-gray-200 relative">
+              <img src={link} alt="" className="rounded-lg w-auto" />
+              {/* Delete button */}
+              <button
+                type="button"
+                className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 cursor-pointer"
+                onClick={() => confirmDeleteImage(link)}>
+                X
+              </button>
             </div>
           ))}
         </ReactSortable>
@@ -160,26 +212,27 @@ export default function ProductForm({
           <input type="file" onChange={uploadImages} className="hidden" />
         </label>
       </div>
+
       <label>სრული აღწერა</label>
       <textarea
-        placeholder="description"
+        placeholder="სრული აღწერა"
         value={description}
         onChange={ev => setDescription(ev.target.value)}
       />
 
       <label>მოკლე აღწერა</label>
       <textarea
-        placeholder="small description"
+        placeholder="მოკლე აღწერა"
         value={descriptionSmall}
         onChange={ev => setDescriptionSmall(ev.target.value)}
       />
 
 
-      <label>ოთახების რაოდენობა</label>
+      <label>ვიზიტის საფასური</label>
       <input
-        type="number" placeholder="ოთახები"
-        value={availableRooms}
-        onChange={ev => setAvailableRooms(ev.target.value)}
+        type="number" placeholder="ვიზიტის საფასური"
+        value={price}
+        onChange={ev => setPrice(ev.target.value)}
       />
 
       <label>მისამართი</label>
@@ -197,7 +250,7 @@ export default function ProductForm({
         onChange={ev => setPhone(ev.target.value)}
       />
 
-      <label>ვებსაიტი</label>
+      <label>ვებსაიტი (არასავალდებულო)</label>
       <input
         type="text" placeholder="ვებსაიტი"
         value={website}
@@ -211,23 +264,23 @@ export default function ProductForm({
         onChange={ev => setWorkingHours(ev.target.value)}
       />
 
-      <label>Facebook</label>
+      <label>Facebook (არასავალდებულო)</label>
       <input
-        type="text" placeholder="FB"
+        type="text" placeholder="ფეისბუქის ლინკი"
         value={facebook}
         onChange={ev => setFacebook(ev.target.value)}
       />
 
-      <label>Instagram</label>
+      <label>Instagram (არასავალდებულო)</label>
       <input
-        type="text" placeholder="IG"
+        type="text" placeholder="ინსტაგრამის ლინკი"
         value={instagram}
         onChange={ev => setInstagram(ev.target.value)}
       />
 
-      <label>Trip Advisor</label>
+      <label>Trip Advisor (არასავალდებულო)</label>
       <input
-        type="text" placeholder="Trip Advisor"
+        type="text" placeholder="თრიფ ედვაისორის ლინკი"
         value={tripAdvisor}
         onChange={ev => setTripAdvisor(ev.target.value)}
       />
@@ -242,3 +295,7 @@ export default function ProductForm({
     </form>
   );
 }
+
+export default withSwal(({ swal, ...storyInfo }, ref) => (
+  <StoryForm swal={swal} {...storyInfo} />
+));

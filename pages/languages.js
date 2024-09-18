@@ -3,47 +3,47 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { withSwal } from 'react-sweetalert2';
 
-function Categories({ swal }) {
-  const [editedCategory, setEditedCategory] = useState(null);
+function Languages({ swal }) {
+  const [editedLanguage, setEditedLanguage] = useState(null);
   const [name, setName] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [languages, setLanguages] = useState([]);
 
   useEffect(() => {
-    fetchCategories();
+    fetchLanguages();
   }, []);
 
-  function fetchCategories() {
-    axios.get('/api/categories').then(result => {
-      setCategories(result.data);
+  function fetchLanguages() {
+    axios.get('/api/languages').then(result => {
+      setLanguages(result.data);
     });
   }
 
-  async function saveCategory(ev) {
+  async function saveLanguage(ev) {
     ev.preventDefault();
     const data = {
       name,
     };
 
-    if (editedCategory) {
-      data._id = editedCategory._id;
-      await axios.put('/api/categories', data);
-      setEditedCategory(null);
+    if (editedLanguage) {
+      data._id = editedLanguage._id;
+      await axios.put('/api/languages', data);
+      setEditedLanguage(null);
     } else {
-      await axios.post('/api/categories', data);
+      await axios.post('/api/languages', data);
     }
     setName('');
-    fetchCategories();
+    fetchLanguages();
   }
 
-  function editCategory(category) {
-    setEditedCategory(category);
-    setName(category.name);
+  function editLanguage(language) {
+    setEditedLanguage(language);
+    setName(language.name);
   }
 
-  function deleteCategory(category) {
+  function deleteLanguage(language) {
     swal.fire({
-      title: 'ნამდვილად გსურთ კატეგორიის წაშლა?',
-      text: `გინდათ წაშალოთ: ${category.name}?`,
+      title: 'ნამდვილად გსურთ ენის წაშლა?',
+      text: `გინდათ წაშალოთ: ${language.name}?`,
       showCancelButton: true,
       cancelButtonText: 'დახურვა',
       confirmButtonText: 'წაშლა',
@@ -51,37 +51,37 @@ function Categories({ swal }) {
       reverseButtons: true,
     }).then(async result => {
       if (result.isConfirmed) {
-        const { _id } = category;
-        await axios.delete('/api/categories?_id=' + _id);
-        fetchCategories();
+        const { _id } = language;
+        await axios.delete('/api/languages?_id=' + _id);
+        fetchLanguages();
       }
     });
   }
 
   return (
     <Layout>
-      <h1>კატეგორიები</h1>
+      <h1>ენები</h1>
       <label>
-        {editedCategory
-          ? `${editedCategory.name} - რედაქტირება`
-          : 'ახალი კატეგორიის შექმნა'}
+        {editedLanguage
+          ? `${editedLanguage.name} - რედაქტირება`
+          : 'ახალი ენის დამატება'}
       </label>
 
-      <form onSubmit={saveCategory}>
+      <form onSubmit={saveLanguage}>
         <div className="flex gap-1">
           <input
             type="text"
-            placeholder={'კატეგორიის სახელი'}
+            placeholder={'ენის სახელი'}
             onChange={ev => setName(ev.target.value)}
             value={name} />
         </div>
 
         <div className="flex gap-1">
-          {editedCategory && (
+          {editedLanguage && (
             <button
               type="button"
               onClick={() => {
-                setEditedCategory(null);
+                setEditedLanguage(null);
                 setName('');
               }}
               className="btn-default">დაბრუნება</button>
@@ -89,33 +89,33 @@ function Categories({ swal }) {
 
           <button type="submit"
             className="btn-primary py-1">
-            კატეგორიის დამახსოვრება
+            ენის დამახსოვრება
           </button>
         </div>
 
       </form>
 
-      {!editedCategory && (
+      {!editedLanguage && (
         <table className="basic mt-4">
           <thead>
             <tr>
-              <td>კატეგორიის სახელი</td>
+              <td>ენები</td>
               <td></td>
             </tr>
           </thead>
           <tbody>
-            {categories.length > 0 && categories.map(category => (
-              <tr key={category._id}>
-                <td>{category.name}</td>
+            {languages.length > 0 && languages.map(language => (
+              <tr key={language._id}>
+                <td>{language.name}</td>
                 <td>
                   <button
-                    onClick={() => editCategory(category)}
+                    onClick={() => editLanguage(language)}
                     className="btn-default mr-1"
                   >
                     რედაქტირება
                   </button>
                   <button
-                    onClick={() => deleteCategory(category)}
+                    onClick={() => deleteLanguage(language)}
                     className="btn-red">წაშლა</button>
                 </td>
               </tr>
@@ -128,5 +128,5 @@ function Categories({ swal }) {
 }
 
 export default withSwal(({ swal }, ref) => (
-  <Categories swal={swal} />
+  <Languages swal={swal} />
 ));
