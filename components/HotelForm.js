@@ -5,9 +5,9 @@ import axios from "axios";
 import Spinner from "@/components/Spinner";
 import { ReactSortable } from "react-sortablejs";
 import { withSwal } from "react-sweetalert2";
-import Image from "next/image";
 
-function HotelForm({ swal,
+function HotelForm({
+  swal,
   _id,
   title: existingTitle,
   description: existingDescription,
@@ -23,29 +23,27 @@ function HotelForm({ swal,
   instagram: existingInstagram,
   tripAdvisor: existingTripAdvisor,
 }) {
-  const [title, setTitle] = useState(existingTitle || '');
-  const [description, setDescription] = useState(existingDescription || '');
-  const [descriptionSmall, setDescriptionSmall] = useState(existingDescriptionSmall || '');
-  const [categories, setCategories] = useState(() => {
-    if (assignedCategories) {
-      return assignedCategories;
-    } else {
-      return [];
-    }
+  const [formData, setFormData] = useState({
+    title: existingTitle || '',
+    description: existingDescription || '',
+    descriptionSmall: existingDescriptionSmall || '',
+    images: existingImages || [],
+    categories: assignedCategories || [],
+    availableRooms: existingAvailableRooms || '',
+    address: existingAddress || '',
+    phone: existingPhone || '',
+    website: existingWebsite || '',
+    workingHours: existingWorkingHours || '',
+    facebook: existingFacebook || '',
+    instagram: existingInstagram || '',
+    tripAdvisor: existingTripAdvisor || '',
   });
-  const [images, setImages] = useState(existingImages || []);
-  const [availableRooms, setAvailableRooms] = useState(existingAvailableRooms || "");
-  const [address, setAddress] = useState(existingAddress || "");
-  const [phone, setPhone] = useState(existingPhone || "");
-  const [website, setWebsite] = useState(existingWebsite || "");
-  const [workingHours, setWorkingHours] = useState(existingWorkingHours || "");
-  const [facebook, setFacebook] = useState(existingFacebook || "");
-  const [instagram, setInstagram] = useState(existingInstagram || "");
-  const [tripAdvisor, setTripAdvisor] = useState(existingTripAdvisor || "");
 
   const [goToHotels, setGoToHotels] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [fetchedCategories, setFetchedCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const router = useRouter();
 
@@ -55,58 +53,45 @@ function HotelForm({ swal,
     });
   }, []);
 
+  useEffect(() => {
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+    const filtered = fetchedCategories.filter(category =>
+      category.name.toLowerCase().includes(lowercasedSearchTerm)
+    );
+    setFilteredCategories(filtered);
+  }, [searchTerm, fetchedCategories]);
 
   const handleCategoryChange = (categoryId) => {
-    const category = fetchedCategories.find((cat) => cat._id === categoryId);
-
+    const category = fetchedCategories.find(cat => cat._id === categoryId);
     if (!category) {
       console.error('Category not found:', categoryId);
       return;
     }
 
-    if (categories.find((cat) => cat._id === categoryId)) {
-      setCategories((prevCategories) =>
-        prevCategories.filter((cat) => cat._id !== categoryId)
-      );
-    } else {
-      setCategories([...categories, category]);
-    }
+    setFormData(prevData => {
+      const updatedCategories = prevData.categories.find(cat => cat._id === categoryId)
+        ? prevData.categories.filter(cat => cat._id !== categoryId)
+        : [...prevData.categories, category];
+
+      return { ...prevData, categories: updatedCategories };
+    });
   };
 
-  async function saveHotel(ev) {
+  const handleInputChange = (field) => (ev) => {
+    setFormData(prevData => ({ ...prevData, [field]: ev.target.value }));
+  };
+
+  const saveHotel = async (ev) => {
     ev.preventDefault();
-    const data = {
-      title,
-      description,
-      descriptionSmall,
-      images,
-      categories,
-      availableRooms,
-      address,
-      phone,
-      website,
-      workingHours,
-      facebook,
-      instagram,
-      tripAdvisor,
-    };
     if (_id) {
-      //update
-      await axios.put('/api/hotels', { ...data, _id });
+      await axios.put('/api/hotels', { ...formData, _id });
     } else {
-      //create
-      await axios.post('/api/hotels', data);
+      await axios.post('/api/hotels', formData);
     }
     setGoToHotels(true);
-  }
+  };
 
-
-  if (goToHotels) {
-    router.push('/hotels');
-  }
-
-
-  async function uploadImages(ev) {
+  const uploadImages = async (ev) => {
     const files = ev.target?.files;
     if (files?.length > 0) {
       setIsUploading(true);
@@ -115,14 +100,15 @@ function HotelForm({ swal,
         data.append('file', file);
       }
       const res = await axios.post('/api/upload', data);
-      setImages(oldImages => {
-        return [...oldImages, ...res.data.links];
-      });
+      setFormData(prevData => ({
+        ...prevData,
+        images: [...prevData.images, ...res.data.links],
+      }));
       setIsUploading(false);
     }
-  }
+  };
 
-  function confirmDeleteImage(link) {
+  const confirmDeleteImage = (link) => {
     swal.fire({
       title: 'ნამდვილად გსურთ სურათის წაშლა?',
       icon: 'warning',
@@ -133,20 +119,26 @@ function HotelForm({ swal,
       reverseButtons: true,
     }).then(async result => {
       if (result.isConfirmed) {
-        deleteImage(link); // Call the delete function if confirmed
+        await deleteImage(link);
       }
     });
-  }
+  };
 
-  // Function to delete image
-  async function deleteImage(link) {
-    const key = link.split('/').pop(); // Extracting the filename from the link
+  const deleteImage = async (link) => {
+    const key = link.split('/').pop();
     await axios.post('/api/delete', { key });
-    setImages(oldImages => oldImages.filter(image => image !== link)); // Remove from state
-  }
+    setFormData(prevData => ({
+      ...prevData,
+      images: prevData.images.filter(image => image !== link),
+    }));
+  };
 
-  function updateImagesOrder(images) {
-    setImages(images);
+  const updateImagesOrder = (images) => {
+    setFormData(prevData => ({ ...prevData, images }));
+  };
+
+  if (goToHotels) {
+    router.push('/hotels');
   }
 
   return (
@@ -155,45 +147,58 @@ function HotelForm({ swal,
       <input
         type="text"
         placeholder="სასტუმროს სახელი"
-        value={title}
-        onChange={ev => setTitle(ev.target.value)} />
+        value={formData.title}
+        onChange={handleInputChange('title')}
+      />
 
-      <label className="my-3 inline-block">კატეგორიები</label>
-      <div className="grid grid-cols-4 gap-2 p-3 shadow-lg max-h-32 overflow-auto mb-5">
-        {fetchedCategories.map((category) => (
+      <div>
+        <label className="my-3 inline-block">კატეგორიები</label>
+        <div>
+          <label>კატეგორიის ძებნა</label>
+          <input
+            type="text"
+            placeholder="მოძებნე კატეგორია"
+            value={searchTerm}
+            onChange={ev => setSearchTerm(ev.target.value)}
+          />
+        </div>
 
-          <div key={category._id}>
-            <label className="flex items-center gap-1 text-base">
-              {category.name}
-              <input
-                className="w-auto p-0 m-0"
-                type="checkbox"
-                value={category._id}
-                defaultChecked={categories.find((cat) => cat._id === category._id)}
-                onChange={(ev) => handleCategoryChange(category._id)}
-              />
-            </label>
-          </div>
-        ))}
+        <div className="grid grid-cols-4 gap-2 p-3 shadow-lg max-h-32 overflow-auto mb-5">
+          {filteredCategories.map(category => (
+            <div key={category._id}>
+              <label className="flex items-center gap-1 text-base">
+                {category.name}
+                <input
+                  className="w-auto p-0 m-0"
+                  type="checkbox"
+                  value={category._id}
+                  checked={formData.categories.find(cat => cat._id === category._id)}
+                  onChange={() => handleCategoryChange(category._id)}
+                />
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <label>
-        ფოტოები
-      </label>
+      <label>ფოტოები</label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
-          list={images}
+          list={formData.images}
           className="flex flex-wrap gap-1"
-          setList={updateImagesOrder}>
-          {!!images?.length && images.map(link => (
+          setList={updateImagesOrder}
+        >
+          {formData.images.map(link => (
             <div key={link} className="h-44 bg-white p-4 shadow-sm rounded-sm border border-gray-200 relative">
               <img src={link} alt="" className="rounded-lg w-auto" />
-              {/* Delete button */}
               <button
                 type="button"
                 className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 cursor-pointer"
-                onClick={() => confirmDeleteImage(link)}>
-                X
+                onClick={() => confirmDeleteImage(link)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
               </button>
             </div>
           ))}
@@ -207,9 +212,7 @@ function HotelForm({ swal,
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
           </svg>
-          <div>
-            სურათის დამატება
-          </div>
+          <div>სურათის დამატება</div>
           <input type="file" onChange={uploadImages} className="hidden" />
         </label>
       </div>
@@ -217,86 +220,88 @@ function HotelForm({ swal,
       <label>სრული აღწერა</label>
       <textarea
         placeholder="სრული აღწერა"
-        value={description}
-        onChange={ev => setDescription(ev.target.value)}
+        value={formData.description}
+        onChange={handleInputChange('description')}
       />
 
       <label>მოკლე აღწერა</label>
       <textarea
         placeholder="მოკლე აღწერა"
-        value={descriptionSmall}
-        onChange={ev => setDescriptionSmall(ev.target.value)}
+        value={formData.descriptionSmall}
+        onChange={handleInputChange('descriptionSmall')}
       />
-
 
       <label>ოთახების რაოდენობა</label>
       <input
-        type="number" placeholder="ოთახების რაოდენობა"
-        value={availableRooms}
-        onChange={ev => setAvailableRooms(ev.target.value)}
+        type="number"
+        placeholder="ოთახების რაოდენობა"
+        value={formData.availableRooms}
+        onChange={handleInputChange('availableRooms')}
       />
 
       <label>მისამართი</label>
       <input
-        type="text" placeholder="მისამართი"
-        value={address}
-        onChange={ev => setAddress(ev.target.value)}
+        type="text"
+        placeholder="მისამართი"
+        value={formData.address}
+        onChange={handleInputChange('address')}
       />
-
 
       <label>ტელეფონი</label>
       <input
-        type="text" placeholder="ტელეფონი"
-        value={phone}
-        onChange={ev => setPhone(ev.target.value)}
+        type="text"
+        placeholder="ტელეფონი"
+        value={formData.phone}
+        onChange={handleInputChange('phone')}
       />
 
       <label>ვებსაიტი</label>
       <input
-        type="text" placeholder="ვებსაიტი"
-        value={website}
-        onChange={ev => setWebsite(ev.target.value)}
+        type="text"
+        placeholder="ვებსაიტი"
+        value={formData.website}
+        onChange={handleInputChange('website')}
       />
 
       <label>სამუშაო საათები</label>
       <input
-        type="text" placeholder="სამუშაო საათები"
-        value={workingHours}
-        onChange={ev => setWorkingHours(ev.target.value)}
+        type="text"
+        placeholder="სამუშაო საათები"
+        value={formData.workingHours}
+        onChange={handleInputChange('workingHours')}
       />
 
-      <label>Facebook</label>
+      <label>ფეისბუქი</label>
       <input
-        type="text" placeholder="ფეისბუქის ლინკი"
-        value={facebook}
-        onChange={ev => setFacebook(ev.target.value)}
+        type="text"
+        placeholder="ფეისბუქი"
+        value={formData.facebook}
+        onChange={handleInputChange('facebook')}
       />
 
-      <label>Instagram</label>
+      <label>ინსტაგრამი</label>
       <input
-        type="text" placeholder="ინსტაგრამის ლინკი"
-        value={instagram}
-        onChange={ev => setInstagram(ev.target.value)}
+        type="text"
+        placeholder="ინსტაგრამი"
+        value={formData.instagram}
+        onChange={handleInputChange('instagram')}
       />
 
-      <label>Trip Advisor</label>
+      <label>ტრიპ ადვაიზორი</label>
       <input
-        type="text" placeholder="თრიფ ედვაისორის ლინკი"
-        value={tripAdvisor}
-        onChange={ev => setTripAdvisor(ev.target.value)}
+        type="text"
+        placeholder="ტრიპ ადვაიზორი"
+        value={formData.tripAdvisor}
+        onChange={handleInputChange('tripAdvisor')}
       />
 
-
-
-      <button
-        type="submit"
-        className="btn-primary">
-        დამახსოვრება
+      <button type="submit" className="btn-primary">
+        {isUploading ? 'დამატება...' : 'დამატება'}
       </button>
     </form>
   );
 }
 
 export default withSwal(({ swal, ...hotelInfo }, ref) => (
-  <HotelForm swal={swal} {...hotelInfo} />
+  <HotelForm swal={swal} {...hotelInfo} ref={ref} />
 ));
