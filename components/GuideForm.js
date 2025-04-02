@@ -39,6 +39,7 @@ function GuideForm({ swal,
   const [phone, setPhone] = useState(existingPhone || "");
   const [isCertified, setIsCertified] = useState(existingIsCertified || false);
   const [certifications, setCertifications] = useState(existingCertifications || []);
+  console.log(certifications);
 
   const [goToGuides, setGoToGuides] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -322,32 +323,36 @@ function GuideForm({ swal,
       </label>
       <div className="mb-2 flex flex-wrap gap-1">
         <div className="flex flex-wrap gap-1">
-          {!!certifications?.length && certifications.map((link, index) => (
-            <div key={link} className="relative">
-              <a download href={link} className="h-44 bg-white p-4 shadow-sm rounded-sm border border-gray-200">
-                <svg className="w-5 h-4" viewBox="0 0 100 88" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="100" height="88" rx="14" fill="white" />
-                  <path d="M70.777 73.6474L73.7735 68.4592L78.9591 71.4556L75.1235 57.1377L66.9414 59.3295L70.777 73.6474Z" fill="#F54337" />
-                  <path d="M63.1059 73.6474L60.1094 68.4592L54.9238 71.4556L58.7594 57.1377L66.9415 59.3295L63.1059 73.6474Z" fill="#F54337" />
-                  <path d="M66.9403 60.9411C73.9575 60.9411 79.6461 55.2524 79.6461 48.2352C79.6461 41.2179 73.9575 35.5293 66.9403 35.5293C59.923 35.5293 54.2344 41.2179 54.2344 48.2352C54.2344 55.2524 59.923 60.9411 66.9403 60.9411Z" fill="#FFEB3C" />
-                  <path d="M79.6472 21.7646H22.4707V23.8823H79.6472V21.7646Z" fill="#C4C4C4" />
-                  <path d="M79.6472 28.1172H22.4707V30.2348H79.6472V28.1172Z" fill="#C4C4C4" />
-                  <path d="M50.0001 34.4707H22.4707V36.5884H50.0001V34.4707Z" fill="#C4C4C4" />
-                  <path d="M50.0001 40.8232H22.4707V42.9409H50.0001V40.8232Z" fill="#C4C4C4" />
-                  <path d="M50.0001 47.1768H22.4707V49.2944H50.0001V47.1768Z" fill="#C4C4C4" />
-                </svg>
-                <span>{`სერთიფიკატი ${index + 1}`}</span>
+          {!!certifications?.length && certifications.map((link, index) => {
+            const filename = link.substring(link.lastIndexOf('/') + 1);
+            const displayName = filename.substring(filename.indexOf('-') + 1);
+            return (
+              <div key={link} className="relative">
+                <a download href={link} target="_blank" className="h-44 bg-white p-4 shadow-sm rounded-sm border border-gray-200">
+                  <svg className="w-8 h-8" viewBox="0 0 100 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="88" rx="14" fill="white" />
+                    <path d="M70.777 73.6474L73.7735 68.4592L78.9591 71.4556L75.1235 57.1377L66.9414 59.3295L70.777 73.6474Z" fill="#F54337" />
+                    <path d="M63.1059 73.6474L60.1094 68.4592L54.9238 71.4556L58.7594 57.1377L66.9415 59.3295L63.1059 73.6474Z" fill="#F54337" />
+                    <path d="M66.9403 60.9411C73.9575 60.9411 79.6461 55.2524 79.6461 48.2352C79.6461 41.2179 73.9575 35.5293 66.9403 35.5293C59.923 35.5293 54.2344 41.2179 54.2344 48.2352C54.2344 55.2524 59.923 60.9411 66.9403 60.9411Z" fill="#FFEB3C" />
+                    <path d="M79.6472 21.7646H22.4707V23.8823H79.6472V21.7646Z" fill="#C4C4C4" />
+                    <path d="M79.6472 28.1172H22.4707V30.2348H79.6472V28.1172Z" fill="#C4C4C4" />
+                    <path d="M50.0001 34.4707H22.4707V36.5884H50.0001V34.4707Z" fill="#C4C4C4" />
+                    <path d="M50.0001 40.8232H22.4707V42.9409H50.0001V40.8232Z" fill="#C4C4C4" />
+                    <path d="M50.0001 47.1768H22.4707V49.2944H50.0001V47.1768Z" fill="#C4C4C4" />
+                  </svg>
+                  {displayName}
 
-                {/* Delete button */}
-              </a>
-              <button
-                type="button"
-                className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 cursor-pointer"
-                onClick={() => confirmDeleteCertificate(link)}>
-                X
-              </button>
-            </div>
-          ))}
+                  {/* Delete button */}
+                </a>
+                <button
+                  type="button"
+                  className="absolute top-1 -right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center p-1 cursor-pointer"
+                  onClick={() => confirmDeleteCertificate(link)}>
+                  X
+                </button>
+              </div>
+            );
+          })}
         </div>
         {isCertificateUploading && (
           <div className="h-24 flex items-center">

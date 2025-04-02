@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 export default function NewGuide() {
   return (
     <Layout>
-      <h1>ახალის დამატება</h1>
+      <h1>ახალი გიდის დამატება</h1>
       <GuideForm />
     </Layout>
   );

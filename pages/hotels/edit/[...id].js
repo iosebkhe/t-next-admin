@@ -9,7 +9,7 @@ export default function EditHotelPage() {
   const router = useRouter();
 
   const { id } = router.query;
-  console.log(id);
+  console.log(hotelInfo.images);
 
   useEffect(() => {
     if (!id) {
